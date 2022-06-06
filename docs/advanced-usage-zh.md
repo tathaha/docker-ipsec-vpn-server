@@ -1,6 +1,6 @@
 # 高级用法
 
-*其他语言版本: [English](advanced-usage.md), [简体中文](advanced-usage-zh.md)。*
+*其他语言版本: [English](advanced-usage.md), [中文](advanced-usage-zh.md)。*
 
 - [使用其他的 DNS 服务器](#使用其他的-dns-服务器)
 - [不启用 privileged 模式运行](#不启用-privileged-模式运行)
@@ -8,6 +8,7 @@
 - [访问 Docker 主机上的其它容器](#访问-docker-主机上的其它容器)
 - [指定 VPN 服务器的公有 IP](#指定-vpn-服务器的公有-ip)
 - [为 VPN 客户端指定静态 IP](#为-vpn-客户端指定静态-ip)
+- [自定义 VPN 子网](#自定义-vpn-子网)
 - [关于 host network 模式](#关于-host-network-模式)
 - [启用 Libreswan 日志](#启用-libreswan-日志)
 - [查看服务器状态](#查看服务器状态)
@@ -23,6 +24,8 @@
 VPN_DNS_SRV1=1.1.1.1
 VPN_DNS_SRV2=1.0.0.1
 ```
+
+请注意，如果 Docker 容器中已经配置了 IKEv2，你还需要编辑 Docker 容器内的 `/etc/ipsec.d/ikev2.conf` 并将 `8.8.8.8` 和 `8.8.4.4` 替换为你的其他的 DNS 服务器，然后重新启动 Docker 容器。
 
 ## 不启用 privileged 模式运行
 
@@ -101,7 +104,7 @@ docker run \
 VPN_PUBLIC_IP=192.0.2.2
 ```
 
-请注意，如果在 Docker 容器中已经配置了 IKEv2，则此变量无效。在这种情况下，你可以移除 IKEv2 并使用自定义选项重新配置它。参见 [配置并使用 IKEv2 VPN](../README-zh.md#配置并使用-ikev2-vpn)。
+请注意，如果在 Docker 容器中已经配置了 IKEv2，则此变量对 IKEv2 模式无效。在这种情况下，你可以移除 IKEv2 并使用自定义选项重新配置它。参见 [配置并使用 IKEv2 VPN](../README-zh.md#配置并使用-ikev2-vpn)。
 
 如果你想要 VPN 客户端在 VPN 连接处于活动状态时使用指定的公有 IP 作为其 "出站 IP"，并且指定的 IP **不是** Docker 主机上的主 IP（或默认路由），则可能需要额外的配置。在这种情况下，你可以尝试在 Docker 主机上添加一个 IPTables `SNAT` 规则。如果要在重启后继续有效，你可以将命令添加到 `/etc/rc.local`。
 
@@ -143,6 +146,33 @@ VPN_XAUTH_POOL=192.168.43.100-192.168.43.250
 请注意，如果你在 `env` 文件中指定了 `VPN_XAUTH_POOL`，并且在 Docker 容器中已经配置了 IKEv2，你 **必须** 在重新创建 Docker 容器之前手动编辑容器内的 `/etc/ipsec.d/ikev2.conf` 并将 `rightaddresspool=192.168.43.10-192.168.43.250` 替换为与 `VPN_XAUTH_POOL` **相同的值**。否则 IKEv2 可能会停止工作。
 
 **注：** 在你的 `env` 文件中，**不要**为变量值添加 `""` 或者 `''`，或在 `=` 两边添加空格。**不要**在值中使用这些字符： `\ " '`。
+
+## 自定义 VPN 子网
+
+默认情况下，IPsec/L2TP VPN 客户端将使用内部 VPN 子网 `192.168.42.0/24`，而 IPsec/XAuth ("Cisco IPsec") 和 IKEv2 VPN 客户端将使用内部 VPN 子网 `192.168.43.0/24`。有关更多详细信息，请阅读上一节。
+
+对于大多数用例，没有必要也 **不建议** 自定义这些子网。但是，如果你的用例需要它，你可以在 `env` 文件中指定自定义子网，然后你必须重新创建 Docker 容器。
+
+```
+# 示例：为 IPsec/L2TP 模式指定自定义 VPN 子网
+# 注：必须指定所有三个变量。
+VPN_L2TP_NET=10.1.0.0/16
+VPN_L2TP_LOCAL=10.1.0.1
+VPN_L2TP_POOL=10.1.0.10-10.1.254.254
+```
+
+```
+# 示例：为 IPsec/XAuth 和 IKEv2 模式指定自定义 VPN 子网
+# 注：必须指定以下两个变量。
+VPN_XAUTH_NET=10.2.0.0/16
+VPN_XAUTH_POOL=10.2.0.10-10.2.254.254
+```
+
+**注：** 在你的 `env` 文件中，**不要**为变量值添加 `""` 或者 `''`，或在 `=` 两边添加空格。
+
+在上面的例子中，`VPN_L2TP_LOCAL` 是在 IPsec/L2TP 模式下的 VPN 服务器的内网 IP。`VPN_L2TP_POOL` 和 `VPN_XAUTH_POOL` 是为 VPN 客户端自动分配的 IP 地址池。
+
+请注意，如果你在 `env` 文件中指定了 `VPN_XAUTH_POOL`，并且在 Docker 容器中已经配置了 IKEv2，你 **必须** 在重新创建 Docker 容器之前手动编辑容器内的 `/etc/ipsec.d/ikev2.conf` 并将 `rightaddresspool=192.168.43.10-192.168.43.250` 替换为与 `VPN_XAUTH_POOL` **相同的值**。否则 IKEv2 可能会停止工作。
 
 ## 关于 host network 模式
 

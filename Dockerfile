@@ -9,7 +9,7 @@
 
 FROM alpine:3.15
 
-ENV SWAN_VER 4.6
+ENV SWAN_VER 4.7
 WORKDIR /opt/src
 
 RUN set -x \
@@ -36,7 +36,7 @@ RUN set -x \
          bison flex gcc make libc-dev bsd-compat-headers linux-pam-dev \
          nss-dev libcap-ng-dev libevent-dev curl-dev nspr-dev
 
-RUN wget -t 3 -T 30 -nv -O /opt/src/ikev2.sh https://github.com/hwdsl2/setup-ipsec-vpn/raw/cc709766e9ffaba9c4bd0f76fcde828f2ab69f0c/extras/ikev2setup.sh \
+RUN wget -t 3 -T 30 -nv -O /opt/src/ikev2.sh https://github.com/hwdsl2/setup-ipsec-vpn/raw/7b9813d562fe1346f6aed47ee6ecb82f7dd9b175/extras/ikev2setup.sh \
     && chmod +x /opt/src/ikev2.sh \
     && ln -s /opt/src/ikev2.sh /usr/bin
 

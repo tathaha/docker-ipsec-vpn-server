@@ -63,9 +63,9 @@ os_arch=$(uname -m | tr -dc 'A-Za-z0-9_-')
 if [ ! -e /dev/ppp ]; then
 cat <<'EOF'
 
-Warning: /dev/ppp is missing, and IPsec/L2TP mode may not work. Please use
-         IKEv2 (https://git.io/ikev2docker) or IPsec/XAuth mode to connect.
-         Debian 11/10 users, see https://git.io/vpndebian10
+WARNING: /dev/ppp is missing, and IPsec/L2TP mode may not work.
+         Please use IKEv2 or IPsec/XAuth mode to connect.
+         Debian 11/10 users, see vpnsetup.net/debian10
 EOF
 fi
 
@@ -187,6 +187,31 @@ if [ -n "$VPN_IKEV2_ONLY" ]; then
   VPN_IKEV2_ONLY=$(noquotes "$VPN_IKEV2_ONLY")
 fi
 
+if [ -n "$VPN_L2TP_NET" ]; then
+  VPN_L2TP_NET=$(nospaces "$VPN_L2TP_NET")
+  VPN_L2TP_NET=$(noquotes "$VPN_L2TP_NET")
+fi
+
+if [ -n "$VPN_L2TP_LOCAL" ]; then
+  VPN_L2TP_LOCAL=$(nospaces "$VPN_L2TP_LOCAL")
+  VPN_L2TP_LOCAL=$(noquotes "$VPN_L2TP_LOCAL")
+fi
+
+if [ -n "$VPN_L2TP_POOL" ]; then
+  VPN_L2TP_POOL=$(nospaces "$VPN_L2TP_POOL")
+  VPN_L2TP_POOL=$(noquotes "$VPN_L2TP_POOL")
+fi
+
+if [ -n "$VPN_XAUTH_NET" ]; then
+  VPN_XAUTH_NET=$(nospaces "$VPN_XAUTH_NET")
+  VPN_XAUTH_NET=$(noquotes "$VPN_XAUTH_NET")
+fi
+
+if [ -n "$VPN_XAUTH_POOL" ]; then
+  VPN_XAUTH_POOL=$(nospaces "$VPN_XAUTH_POOL")
+  VPN_XAUTH_POOL=$(noquotes "$VPN_XAUTH_POOL")
+fi
+
 if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
   exiterr "All VPN credentials must be specified. Edit your 'env' file and re-enter them."
 fi
@@ -211,7 +236,7 @@ if [ -n "$VPN_DNS_SRV1" ]; then
   if ! check_ip "$VPN_DNS_SRV1"; then
 cat <<'EOF'
 
-Warning: Invalid DNS server. Check VPN_DNS_SRV1 in your 'env' file.
+WARNING: Invalid DNS server. Check VPN_DNS_SRV1 in your 'env' file.
 EOF
     VPN_DNS_SRV1=""
   fi
@@ -222,7 +247,7 @@ if [ -n "$VPN_DNS_SRV2" ]; then
   if ! check_ip "$VPN_DNS_SRV2"; then
 cat <<'EOF'
 
-Warning: Invalid DNS server. Check VPN_DNS_SRV2 in your 'env' file.
+WARNING: Invalid DNS server. Check VPN_DNS_SRV2 in your 'env' file.
 EOF
     VPN_DNS_SRV2=""
   fi
@@ -232,7 +257,7 @@ if [ -n "$VPN_CLIENT_NAME" ]; then
   if ! check_client_name "$VPN_CLIENT_NAME"; then
 cat <<'EOF'
 
-Warning: Invalid client name. Use one word only, no special characters except '-' and '_'.
+WARNING: Invalid client name. Use one word only, no special characters except '-' and '_'.
          Falling back to default client name 'vpnclient'.
 EOF
     VPN_CLIENT_NAME=""
@@ -243,7 +268,7 @@ if [ -n "$VPN_DNS_NAME" ]; then
   if ! check_dns_name "$VPN_DNS_NAME"; then
 cat <<'EOF'
 
-Warning: Invalid DNS name. 'VPN_DNS_NAME' must be a fully qualified domain name (FQDN).
+WARNING: Invalid DNS name. 'VPN_DNS_NAME' must be a fully qualified domain name (FQDN).
          Falling back to using this server's IP address.
 EOF
     VPN_DNS_NAME=""
@@ -322,8 +347,8 @@ EOF
   if ! grep -q " /etc/ipsec.d " /proc/mounts; then
 cat <<'EOF'
 
-Warning: /etc/ipsec.d not mounted. IKEv2 setup requires a Docker volume
-         to be mounted at /etc/ipsec.d. See: https://git.io/ikev2docker
+WARNING: /etc/ipsec.d not mounted. IKEv2 setup requires a Docker volume
+         to be mounted at /etc/ipsec.d. See: vpnsetup.net/ikev2docker
 EOF
   fi
 elif [ "$disable_ipsec_l2tp" = "yes" ]; then
@@ -627,12 +652,12 @@ cat <<'EOF'
 
 Write these down. You'll need them to connect!
 
-Important notes:   https://git.io/vpnnotes2
-Setup VPN clients: https://git.io/vpnclients
+Important notes:   vpnsetup.net/notes2
+Setup VPN clients: vpnsetup.net/clients
 EOF
 
   if ! grep -q " /etc/ipsec.d " /proc/mounts; then
-    echo "IKEv2 guide:       https://git.io/ikev2docker"
+    echo "IKEv2 guide:       vpnsetup.net/ikev2docker"
   fi
 
 cat <<'EOF'
@@ -677,7 +702,7 @@ $status_text Details for IKEv2 mode:
 EOF
   sed -n '/VPN server address:/,/Next steps:/p' "$ikev2_log"
 cat <<'EOF'
-https://git.io/ikev2docker
+https://vpnsetup.net/ikev2docker
 
 ================================================
 
@@ -700,7 +725,7 @@ if [ ! -f "$ts_file" ] || [ "$(find "$ts_file" -mmin +10080)" ]; then
     && printf '%s\n%s' "$swan_ver" "$swan_ver_latest" | sort -C -V; then
 cat <<EOF
 Note: A newer version of Libreswan ($swan_ver_latest) is available.
-To update this Docker image, see: https://git.io/updatedockervpn
+To update this Docker image, see: vpnsetup.net/dockerupdate
 
 EOF
   fi

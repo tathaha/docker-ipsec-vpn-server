@@ -1,6 +1,6 @@
 # Advanced Usage
 
-*Read this in other languages: [English](advanced-usage.md), [简体中文](advanced-usage-zh.md).*
+*Read this in other languages: [English](advanced-usage.md), [中文](advanced-usage-zh.md).*
 
 - [Use alternative DNS servers](#use-alternative-dns-servers)
 - [Run without privileged mode](#run-without-privileged-mode)
@@ -8,6 +8,7 @@
 - [Access other containers on the Docker host](#access-other-containers-on-the-docker-host)
 - [Specify VPN server's public IP](#specify-vpn-servers-public-ip)
 - [Assign static IPs to VPN clients](#assign-static-ips-to-vpn-clients)
+- [Customize VPN subnets](#customize-vpn-subnets)
 - [About host network mode](#about-host-network-mode)
 - [Enable Libreswan logs](#enable-libreswan-logs)
 - [Check server status](#check-server-status)
@@ -23,6 +24,8 @@ Clients are set to use [Google Public DNS](https://developers.google.com/speed/p
 VPN_DNS_SRV1=1.1.1.1
 VPN_DNS_SRV2=1.0.0.1
 ```
+
+Note that if IKEv2 is already set up in the Docker container, you will also need to edit `/etc/ipsec.d/ikev2.conf` inside the Docker container and replace `8.8.8.8` and `8.8.4.4` with your alternative DNS server(s), then restart the Docker container.
 
 ## Run without privileged mode
 
@@ -101,7 +104,7 @@ On Docker hosts with multiple public IP addresses, advanced users can specify a 
 VPN_PUBLIC_IP=192.0.2.2
 ```
 
-Note that this variable has no effect if IKEv2 is already set up in the Docker container. In this case, you may remove IKEv2 and set it up again using custom options. Refer to [Configure and use IKEv2 VPN](../README.md#configure-and-use-ikev2-vpn).
+Note that this variable has no effect for IKEv2 mode, if IKEv2 is already set up in the Docker container. In this case, you may remove IKEv2 and set it up again using custom options. Refer to [Configure and use IKEv2 VPN](../README.md#configure-and-use-ikev2-vpn).
 
 Additional configuration may be required if you want VPN clients to use the specified public IP as their "outgoing IP" when the VPN connection is active, and the specified IP is NOT the main IP (or default route) on the Docker host. In this case, you can try adding an IPTables `SNAT` rule on the Docker host. To persist after reboot, you may add the command to `/etc/rc.local`.
 
@@ -143,6 +146,33 @@ This will allow you to assign static IPs within the range from `192.168.42.2` to
 Note that if you specify `VPN_XAUTH_POOL` in the `env` file, and IKEv2 is already set up in the Docker container, you **must** manually edit `/etc/ipsec.d/ikev2.conf` inside the container and replace `rightaddresspool=192.168.43.10-192.168.43.250` with the **same value** as `VPN_XAUTH_POOL`, before re-creating the Docker container. Otherwise, IKEv2 may stop working.
 
 **Note:** In your `env` file, DO NOT put `""` or `''` around values, or add space around `=`. DO NOT use these special characters within values: `\ " '`.
+
+## Customize VPN subnets
+
+By default, IPsec/L2TP VPN clients will use internal VPN subnet `192.168.42.0/24`, while IPsec/XAuth ("Cisco IPsec") and IKEv2 VPN clients will use internal VPN subnet `192.168.43.0/24`. For more details, read the previous section.
+
+For most use cases, it is NOT necessary and NOT recommended to customize these subnets. If your use case requires it, however, you may specify custom subnet(s) in your `env` file, then you must re-create the Docker container.
+
+```
+# Example: Specify custom VPN subnet for IPsec/L2TP mode
+# Note: All three variables must be specified.
+VPN_L2TP_NET=10.1.0.0/16
+VPN_L2TP_LOCAL=10.1.0.1
+VPN_L2TP_POOL=10.1.0.10-10.1.254.254
+```
+
+```
+# Example: Specify custom VPN subnet for IPsec/XAuth and IKEv2 modes
+# Note: Both variables must be specified.
+VPN_XAUTH_NET=10.2.0.0/16
+VPN_XAUTH_POOL=10.2.0.10-10.2.254.254
+```
+
+**Note:** In your `env` file, DO NOT put `""` or `''` around values, or add space around `=`.
+
+In the examples above, `VPN_L2TP_LOCAL` is the VPN server's internal IP for IPsec/L2TP mode. `VPN_L2TP_POOL` and `VPN_XAUTH_POOL` are the pools of auto-assigned IP addresses for VPN clients.
+
+Note that if you specify `VPN_XAUTH_POOL` in the `env` file, and IKEv2 is already set up in the Docker container, you **must** manually edit `/etc/ipsec.d/ikev2.conf` inside the container and replace `rightaddresspool=192.168.43.10-192.168.43.250` with the **same value** as `VPN_XAUTH_POOL`, before re-creating the Docker container. Otherwise, IKEv2 may stop working.
 
 ## About host network mode
 

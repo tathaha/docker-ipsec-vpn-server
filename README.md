@@ -1,3 +1,5 @@
+[English](README.md) | [中文](README-zh.md)
+
 # IPsec VPN Server on Docker
 
 [![Build Status](https://github.com/hwdsl2/docker-ipsec-vpn-server/actions/workflows/main-alpine.yml/badge.svg)](https://github.com/hwdsl2/docker-ipsec-vpn-server/actions/workflows/main-alpine.yml) [![GitHub Stars](docs/images/badges/github-stars.svg)](https://github.com/hwdsl2/docker-ipsec-vpn-server/stargazers) [![Docker Stars](docs/images/badges/docker-stars.svg)](https://hub.docker.com/r/hwdsl2/ipsec-vpn-server/) [![Docker Pulls](docs/images/badges/docker-pulls.svg)](https://hub.docker.com/r/hwdsl2/ipsec-vpn-server/)
@@ -6,23 +8,9 @@ Docker image to run an IPsec VPN server, with IPsec/L2TP, Cisco IPsec and IKEv2.
 
 Based on Alpine 3.15 or Debian 11 with [Libreswan](https://libreswan.org) (IPsec VPN software) and [xl2tpd](https://github.com/xelerance/xl2tpd) (L2TP daemon).
 
-[**&raquo; See also: IPsec VPN Server on Ubuntu, Debian and CentOS**](https://github.com/hwdsl2/setup-ipsec-vpn)
+An IPsec VPN encrypts your network traffic, so that nobody between you and the VPN server can eavesdrop on your data as it travels via the Internet. This is especially useful when using unsecured networks, e.g. at coffee shops, airports or hotel rooms.
 
-*Read this in other languages: [English](README.md), [简体中文](README-zh.md).*
-
-#### Table of Contents
-
-- [Quick start](#quick-start)
-- [Install Docker](#install-docker)
-- [Download](#download)
-- [How to use this image](#how-to-use-this-image)
-- [Next steps](#next-steps)
-- [Important notes](#important-notes)
-- [Update Docker image](#update-docker-image)
-- [Configure and use IKEv2 VPN](#configure-and-use-ikev2-vpn)
-- [Advanced usage](#advanced-usage)
-- [Technical details](#technical-details)
-- [License](#license)
+[**&raquo; See also: IPsec VPN Server Auto Setup Scripts**](https://github.com/hwdsl2/setup-ipsec-vpn)
 
 ## Quick start
 
@@ -43,6 +31,13 @@ docker run \
 Your VPN login details will be randomly generated. See [Retrieve VPN login details](#retrieve-vpn-login-details).
 
 To learn more about how to use this image, read the sections below.
+
+## Features
+
+- Supports IKEv2 with strong and fast ciphers (e.g. AES-GCM)
+- Generates VPN profiles to auto-configure iOS, macOS and Android devices
+- Supports Windows, macOS, iOS, Android and Linux as VPN clients
+- Includes a helper script to manage IKEv2 users and certificates
 
 ## Install Docker
 
@@ -71,15 +66,15 @@ Advanced users can [build from source code](docs/advanced-usage.md#build-from-so
 
 ### Image comparison
 
-Two pre-built images are available. The default Alpine-based image is only ~16MB.
+Two pre-built images are available. The default Alpine-based image is only ~18MB.
 
 |                   | Alpine-based             | Debian-based                   |
 | ----------------- | ------------------------ | ------------------------------ |
 | Image name        | hwdsl2/ipsec-vpn-server  | hwdsl2/ipsec-vpn-server:debian |
-| Compressed size   | ~ 16 MB                  | ~ 61 MB                        |
+| Compressed size   | ~ 18 MB                  | ~ 62 MB                        |
 | Base image        | Alpine Linux 3.15        | Debian Linux 11                |
 | Platforms         | amd64, arm64, arm/v7     | amd64, arm64, arm/v7           |
-| Libreswan version | 4.6                      | 4.6                            |
+| Libreswan version | 4.7                      | 4.7                            |
 | IPsec/L2TP        | ✅                       | ✅                              |
 | Cisco IPsec       | ✅                       | ✅                              |
 | IKEv2             | ✅                       | ✅                              |
@@ -141,7 +136,7 @@ By default, no password is required when importing IKEv2 client configuration. Y
 VPN_PROTECT_CONFIG=yes
 ```
 
-**Note:** The variables above have no effect if IKEv2 is already set up in the Docker container.
+**Note:** The variables above have no effect for IKEv2 mode, if IKEv2 is already set up in the Docker container. In this case, you may remove IKEv2 and set it up again using custom options. Refer to [Configure and use IKEv2 VPN](#configure-and-use-ikev2-vpn).
 </details>
 
 ### Start the IPsec VPN server
@@ -210,7 +205,7 @@ Enjoy your very own VPN!
 
 ## Important notes
 
-*Read this in other languages: [English](README.md#important-notes), [简体中文](README-zh.md#重要提示).*
+*Read this in other languages: [English](README.md#important-notes), [中文](README-zh.md#重要提示).*
 
 **Windows users**: For IPsec/L2TP mode, a [one-time registry change](https://github.com/hwdsl2/setup-ipsec-vpn/blob/master/docs/clients.md#windows-error-809) is required if the VPN server or client is behind NAT (e.g. home router).
 
@@ -240,7 +235,7 @@ Otherwise, it will download the latest version. To update your Docker container,
 
 ## Configure and use IKEv2 VPN
 
-*Read this in other languages: [English](README.md#configure-and-use-ikev2-vpn), [简体中文](README-zh.md#配置并使用-ikev2-vpn).*
+*Read this in other languages: [English](README.md#configure-and-use-ikev2-vpn), [中文](README-zh.md#配置并使用-ikev2-vpn).*
 
 IKEv2 mode has improvements over IPsec/L2TP and IPsec/XAuth ("Cisco IPsec"), and does not require an IPsec PSK, username or password. Read more [here](https://github.com/hwdsl2/setup-ipsec-vpn/blob/master/docs/ikev2-howto.md).
 
@@ -311,19 +306,6 @@ docker exec -it ipsec-vpn-server ikev2.sh
 ## Advanced usage
 
 See [Advanced usage](docs/advanced-usage.md).
-
-- [Use alternative DNS servers](docs/advanced-usage.md#use-alternative-dns-servers)
-- [Run without privileged mode](docs/advanced-usage.md#run-without-privileged-mode)
-- [Select VPN modes](docs/advanced-usage.md#select-vpn-modes)
-- [Access other containers on the Docker host](docs/advanced-usage.md#access-other-containers-on-the-docker-host)
-- [Specify VPN server's public IP](docs/advanced-usage.md#specify-vpn-servers-public-ip)
-- [Assign static IPs to VPN clients](docs/advanced-usage.md#assign-static-ips-to-vpn-clients)
-- [About host network mode](docs/advanced-usage.md#about-host-network-mode)
-- [Enable Libreswan logs](docs/advanced-usage.md#enable-libreswan-logs)
-- [Check server status](docs/advanced-usage.md#check-server-status)
-- [Build from source code](docs/advanced-usage.md#build-from-source-code)
-- [Bash shell inside container](docs/advanced-usage.md#bash-shell-inside-container)
-- [Bind mount the env file](docs/advanced-usage.md#bind-mount-the-env-file)
 
 ## Technical details
 
